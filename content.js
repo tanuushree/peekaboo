@@ -4,11 +4,10 @@
   if (document.getElementById("peekaboo-host")) return;
 
   const MASCOTS = {
-    cat:    "🐱",
-    ghost:  "👻",
-    robot:  "🤖",
-    alien:  "👽",
-    wizard: "🧙",
+    cat: "mascots/cat.gif",
+    meow: "mascots/meow.gif",
+    witch: "mascots/witch.gif",
+    panda: "mascots/panda.gif",
   };
 
   // ── Host element + Shadow DOM ───────────────────────────────────────────────
@@ -77,7 +76,9 @@
       #dismiss:hover { color: #374151; }
 
       #avatar {
-        font-size: 36px;
+        width: 100px;
+        height: 100px;
+        display: block;
         line-height: 1;
         cursor: pointer;
         pointer-events: auto;
@@ -101,9 +102,9 @@
   // Attach to <html> so it's always present regardless of body state
   document.documentElement.appendChild(host);
 
-  const bubble  = shadow.getElementById("bubble");
-  const msgEl   = shadow.getElementById("msg");
-  const avatar  = shadow.getElementById("avatar");
+  const bubble = shadow.getElementById("bubble");
+  const msgEl = shadow.getElementById("msg");
+  const avatar = shadow.getElementById("avatar");
   const dismiss = shadow.getElementById("dismiss");
 
   let hideTimer = null;
@@ -144,7 +145,14 @@
   // ── Sync mascot ─────────────────────────────────────────────────────────────
   function syncMascot() {
     chrome.storage.sync.get("mascot", (data) => {
-      avatar.textContent = MASCOTS[data.mascot] || "🐱";
+      const key = data.mascot || "cat";
+      const path = MASCOTS[key] || MASCOTS.cat;
+
+      const url = chrome.runtime.getURL(path);
+
+      avatar.innerHTML = `
+      <img src="${url}" style="width:100px; height:100px; object-fit:contain;" />
+    `;
     });
   }
   syncMascot();
