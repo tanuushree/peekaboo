@@ -1,184 +1,171 @@
-// peekaboo — background.js
-// Service worker: alarms, history fetch, Gemini API call, storage write
+// peekaboo — content.js
 
-const ALARM_NAME = "peekaboo-interval";
-const DEFAULT_INTERVAL = 30; // minutes
+(function () {
+  if (document.getElementById("peekaboo-host")) return;
 
-// ── Tone → system prompt mapping ──────────────────────────────────────────────
-const TONE_PROMPTS = {
-  funny: `You are a witty, slightly chaotic browser companion. Comment on the user's browsing activity with dry humour and playful observations. Keep it light, punchy, and under 2 sentences. Never be mean.`,
-  sarcastic: `You are a deadpan, mildly sarcastic browser companion. Observe the user's browsing with subtle irony. Short, dry, understated. Under 2 sentences. Never cruel.`,
-  motivational: `You are an enthusiastic, genuine motivational companion. Find something positive or growth-oriented in the user's browsing and cheer them on. Warm, energetic, sincere. Under 2 sentences.`,
-  chill: `You are a laid-back, non-judgmental browser companion. Observe the user's browsing casually with zero pressure. Relaxed vibes only. Under 2 sentences.`,
-  honest: `You are a straightforward, neutral browser companion. State plainly what the user has been doing online without spin or embellishment. Factual and brief. Under 2 sentences.`
-};
-
-// ── Init ──────────────────────────────────────────────────────────────────────
-chrome.runtime.onInstalled.addListener(async (details) => {
-  if (details.reason === "install") {
-    chrome.tabs.create({ url: "onboarding.html" });
-  }
-  await setupAlarm();
-});
-
-chrome.runtime.onStartup.addListener(async () => {
-  await setupAlarm();
-});
-
-// Re-setup alarm if interval setting changes
-chrome.storage.onChanged.addListener(async (changes) => {
-  if (changes.interval) {
-    await setupAlarm();
-  }
-});
-
-// ── Alarm setup ───────────────────────────────────────────────────────────────
-async function setupAlarm() {
-  const data = await chrome.storage.sync.get("interval");
-  const interval = data.interval || DEFAULT_INTERVAL;
-  await chrome.alarms.clear(ALARM_NAME);
-  chrome.alarms.create(ALARM_NAME, { periodInMinutes: interval });
-}
-
-// ── Main alarm handler ────────────────────────────────────────────────────────
-chrome.alarms.onAlarm.addListener(async (alarm) => {
-  if (alarm.name !== ALARM_NAME) return;
-  await runCheckin();
-});
-
-// Expose manual trigger for debugging / onboarding preview
-chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
-  if (msg.type === "MANUAL_CHECKIN") {
-    runCheckin().then(() => sendResponse({ ok: true }));
-    return true; // keep channel open for async
-  }
-});
-
-// ── Core check-in logic ───────────────────────────────────────────────────────
-async function runCheckin() {
-  const settings = await chrome.storage.sync.get(["apiKey", "tone", "mascot", "blocklist"]);
-
-  if (!settings.apiKey) {
-    console.warn("peekaboo: no API key set — skipping check-in.");
-    return;
-  }
-
-  const tone = settings.tone || "chill";
-  const blocklist = settings.blocklist || DEFAULT_BLOCKLIST;
-
-  const [tabs, history] = await Promise.all([
-    getOpenTabs(blocklist),
-    getRecentHistory(blocklist)
-  ]);
-
-  if (tabs.length === 0 && history.length === 0) {
-    await saveMessage("Nothing to report — you've been quiet online.", tone);
-    return;
-  }
-
-  const message = await callGemini(settings.apiKey, tone, tabs, history);
-  await saveMessage(message, tone);
-
-  // Ping all active tabs to refresh the mascot
-  const allTabs = await chrome.tabs.query({ active: true });
-  for (const tab of allTabs) {
-    if (tab.id && tab.url && !tab.url.startsWith("chrome://")) {
-      chrome.tabs.sendMessage(tab.id, { type: "peekaboo_UPDATE" }).catch(() => {});
-    }
-  }
-}
-
-// ── Fetch open tab titles/URLs ────────────────────────────────────────────────
-async function getOpenTabs(blocklist) {
-  const tabs = await chrome.tabs.query({});
-  return tabs
-    .filter(t => t.url && !isBlocked(t.url, blocklist))
-    .map(t => ({ title: t.title || "", url: stripSensitive(t.url) }))
-    .slice(0, 20);
-}
-
-// ── Fetch recent history (last 40 mins) ───────────────────────────────────────
-async function getRecentHistory(blocklist) {
-  const since = Date.now() - 40 * 60 * 1000;
-  const items = await chrome.history.search({ text: "", startTime: since, maxResults: 30 });
-  return items
-    .filter(i => i.url && !isBlocked(i.url, blocklist))
-    .map(i => ({ title: i.title || "", url: stripSensitive(i.url) }))
-    .slice(0, 20);
-}
-
-// ── Block/strip helpers ───────────────────────────────────────────────────────
-const DEFAULT_BLOCKLIST = [
-  "bank", "banking", "chase.com", "wellsfargo", "bankofamerica",
-  "healthcare", "health.google", "mychart",
-  "docs.google.com", "sheets.google.com",
-  "mail.google.com", "outlook.live.com"
-];
-
-function isBlocked(url, blocklist) {
-  const lower = url.toLowerCase();
-  return blocklist.some(term => lower.includes(term));
-}
-
-function stripSensitive(url) {
-  try {
-    const u = new URL(url);
-    // Keep only origin + pathname, drop query params and hash
-    return u.origin + u.pathname;
-  } catch {
-    return url;
-  }
-}
-
-// ── Gemini API call ───────────────────────────────────────────────────────────
-async function callGemini(apiKey, tone, tabs, history) {
-  const systemInstruction = TONE_PROMPTS[tone] || TONE_PROMPTS.chill;
-
-  const userContent = buildPrompt(tabs, history);
-
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-
-  const body = {
-    system_instruction: { parts: [{ text: systemInstruction }] },
-    contents: [{ role: "user", parts: [{ text: userContent }] }],
-    generationConfig: { maxOutputTokens: 100, temperature: 0.9 }
+  const MASCOTS = {
+    cat:    "🐱",
+    ghost:  "👻",
+    robot:  "🤖",
+    alien:  "👽",
+    wizard: "🧙",
   };
 
-  try {
-    const res = await fetch(endpoint, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
-    });
+  // ── Host element + Shadow DOM ───────────────────────────────────────────────
+  const host = document.createElement("div");
+  host.id = "peekaboo-host";
 
-    if (!res.ok) {
-      const err = await res.text();
-      console.error("peekaboo Gemini error:", err);
-      return "Couldn't reach the AI right now — check your API key in settings.";
-    }
+  // These styles are on the HOST element itself, outside shadow DOM,
+  // so they control its position on the page
+  host.style.cssText = `
+    all: initial;
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 2147483647;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+    pointer-events: none;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  `;
 
-    const data = await res.json();
-    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-    return text?.trim() || "No message generated — try again shortly.";
-  } catch (err) {
-    console.error("peekaboo fetch error:", err);
-    return "Network error — check your connection.";
+  const shadow = host.attachShadow({ mode: "open" });
+
+  shadow.innerHTML = `
+    <style>
+      :host { display: block; }
+
+      #bubble {
+        background: #fff;
+        border: 1.5px solid #e5e7eb;
+        border-radius: 14px 14px 4px 14px;
+        padding: 10px 28px 10px 14px;
+        max-width: 220px;
+        font-size: 13px;
+        line-height: 1.5;
+        color: #111;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.13);
+        pointer-events: auto;
+        position: relative;
+        display: none;
+        opacity: 0;
+        transform: translateY(6px);
+        transition: opacity 0.2s ease, transform 0.2s ease;
+      }
+
+      #bubble.visible {
+        display: block;
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      #dismiss {
+        position: absolute;
+        top: 6px;
+        right: 8px;
+        font-size: 11px;
+        color: #9ca3af;
+        cursor: pointer;
+        background: none;
+        border: none;
+        padding: 0;
+        line-height: 1;
+        font-family: inherit;
+      }
+      #dismiss:hover { color: #374151; }
+
+      #avatar {
+        font-size: 36px;
+        line-height: 1;
+        cursor: pointer;
+        pointer-events: auto;
+        user-select: none;
+        display: block;
+        text-align: right;
+        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+        transition: transform 0.15s ease;
+      }
+      #avatar:hover { transform: scale(1.12); }
+      #avatar:active { transform: scale(0.95); }
+    </style>
+
+    <div id="bubble">
+      <button id="dismiss">✕</button>
+      <span id="msg"></span>
+    </div>
+    <div id="avatar">🐱</div>
+  `;
+
+  // Attach to <html> so it's always present regardless of body state
+  document.documentElement.appendChild(host);
+
+  const bubble  = shadow.getElementById("bubble");
+  const msgEl   = shadow.getElementById("msg");
+  const avatar  = shadow.getElementById("avatar");
+  const dismiss = shadow.getElementById("dismiss");
+
+  let hideTimer = null;
+
+  // ── Show bubble ─────────────────────────────────────────────────────────────
+  function showBubble(text) {
+    msgEl.textContent = text;
+    bubble.style.display = "block";
+    // Force reflow so transition fires
+    bubble.getBoundingClientRect();
+    bubble.classList.add("visible");
+    clearTimeout(hideTimer);
+    hideTimer = setTimeout(hideBubble, 10_000);
   }
-}
 
-function buildPrompt(tabs, history) {
-  const tabLines = tabs.map(t => `[TAB] ${t.title} — ${t.url}`).join("\n");
-  const histLines = history.map(h => `[HISTORY] ${h.title} — ${h.url}`).join("\n");
-  return `Here is what the user has open and recently visited in their browser:\n\n${tabLines}\n${histLines}\n\nGenerate a single short message (under 2 sentences) based on this activity.`;
-}
+  function hideBubble() {
+    bubble.classList.remove("visible");
+    clearTimeout(hideTimer);
+    setTimeout(() => { bubble.style.display = "none"; }, 200);
+  }
 
-// ── Save latest message ───────────────────────────────────────────────────────
-async function saveMessage(text, tone) {
-  await chrome.storage.local.set({
-    latestMessage: {
-      text,
-      tone,
-      timestamp: Date.now()
+  // ── Avatar: toggle bubble ───────────────────────────────────────────────────
+  avatar.addEventListener("click", () => {
+    if (bubble.classList.contains("visible")) {
+      hideBubble();
+      return;
+    }
+    chrome.storage.local.get("latestMessage", (data) => {
+      showBubble(data.latestMessage?.text || "No check-in yet — hit Check In in the popup!");
+    });
+  });
+
+  dismiss.addEventListener("click", (e) => {
+    e.stopPropagation();
+    hideBubble();
+  });
+
+  // ── Sync mascot ─────────────────────────────────────────────────────────────
+  function syncMascot() {
+    chrome.storage.sync.get("mascot", (data) => {
+      avatar.textContent = MASCOTS[data.mascot] || "🐱";
+    });
+  }
+  syncMascot();
+
+  // ── Background message ──────────────────────────────────────────────────────
+  chrome.runtime.onMessage.addListener((msg) => {
+    if (msg.type !== "PEEKABOO_UPDATE") return;
+    chrome.storage.local.get("latestMessage", (data) => {
+      const latest = data.latestMessage;
+      if (!latest?.text) return;
+      syncMascot();
+      showBubble(latest.text);
+    });
+  });
+
+  // ── Storage watcher (belt-and-suspenders) ───────────────────────────────────
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === "local" && changes.latestMessage) {
+      syncMascot();
+      showBubble(changes.latestMessage.newValue?.text || "");
     }
   });
-}
+
+})();

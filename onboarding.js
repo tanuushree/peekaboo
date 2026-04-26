@@ -11,6 +11,7 @@ const TONE_EXAMPLES = {
 };
 
 const INTERVALS = [
+  { label: "30 sec", value: 0.5 },
   { label: "15 min", value: 15 },
   { label: "30 min", value: 30 },
   { label: "1 hour", value: 60 },
@@ -156,7 +157,7 @@ document.getElementById("back-4").addEventListener("click", () => goTo(3));
 
 document.getElementById("next-4").addEventListener("click", async () => {
   const key = document.getElementById("api-key-input").value.trim();
-  if (!key) { alert("Please enter your Gemini API key."); return; }
+  if (!key) { alert("Please enter your groq API key."); return; }
   state.apiKey = key;
   await chrome.storage.sync.set({
     mascot: state.mascot,
