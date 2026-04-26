@@ -1,5 +1,5 @@
-const MASCOTS = ["cat", "robot", "fox", "panda", "frog"];
-const MASCOT_EMOJIS = { cat: "🐱", robot: "🤖", fox: "🦊", panda: "🐼", frog: "🐸" };
+const MASCOTS = ["cat", "meow", "witch", "panda"];
+const MASCOT_GIFS = { cat: "mascots/cat.gif", meow: "mascots/meow.gif", witch: "mascots/witch.gif", panda: "mascots/panda.gif" };
 
 const TONES = ["funny", "sarcastic", "motivational", "chill", "honest"];
 const TONE_EXAMPLES = {
@@ -53,25 +53,31 @@ async function fetchSVG(id) {
 
 async function buildMascotGrid() {
   const grid = document.getElementById("mascot-grid");
+  grid.innerHTML = "";
+
   for (const id of MASCOTS) {
     const btn = document.createElement("button");
     btn.className = "mascot-btn";
 
-    const wrap = document.createElement("div");
-    wrap.className = "mascot-svg-wrap";
-    wrap.innerHTML = await fetchSVG(id);
+    const img = document.createElement("img");
+    img.src = `mascots/${id}.gif`; // 👈 direct path (works in onboarding page)
+    img.style.width = "48px";
+    img.style.height = "48px";
+    img.style.objectFit = "contain";
 
     const label = document.createElement("span");
     label.textContent = id;
 
-    btn.appendChild(wrap);
+    btn.appendChild(img);
     btn.appendChild(label);
+
     btn.addEventListener("click", () => {
       document.querySelectorAll(".mascot-btn").forEach(b => b.classList.remove("selected"));
       btn.classList.add("selected");
       state.mascot = id;
       document.getElementById("next-1").disabled = false;
     });
+
     grid.appendChild(btn);
   }
 }

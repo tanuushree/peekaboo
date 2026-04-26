@@ -1,12 +1,11 @@
 // peekaboo — popup.js
 
-const MASCOTS = {
-  cat:    { emoji: "🐱", name: "Cat" },
-  ghost:  { emoji: "👻", name: "Ghost" },
-  robot:  { emoji: "🤖", name: "Robot" },
-  alien:  { emoji: "👽", name: "Alien" },
-  wizard: { emoji: "🧙", name: "Wizard" },
-};
+  const MASCOTS = {
+    cat:    "mascots/cat.gif",
+    meow:  "mascots/meow.gif",
+    witch:  "mascots/witch.gif",
+    panda:  "mascots/panda.gif",
+  };
 
 const TONES = ["funny", "sarcastic", "motivational", "chill", "honest"];
 

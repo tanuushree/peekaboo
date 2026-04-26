@@ -3,7 +3,6 @@
   "name": "Peekaboo",
   "version": "1.0",
   "description": "Your witty browser companion.",
-
   "permissions": [
     "tabs",
     "history",
@@ -11,25 +10,35 @@
     "alarms",
     "scripting"
   ],
-
   "host_permissions": [
     "<all_urls>"
   ],
-
   "background": {
     "service_worker": "background.js"
   },
-
   "action": {
     "default_popup": "popup.html"
   },
-
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["content.js"],
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content.js"
+      ],
       "run_at": "document_idle"
     }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "mascots/*",
+        "icons/*.png"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
   ]
-
 }
