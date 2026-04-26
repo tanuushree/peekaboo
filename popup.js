@@ -1,80 +1,103 @@
-const MASCOT_EMOJIS = { cat: "🐱", robot: "🤖", fox: "🦊", panda: "🐼", frog: "🐸" };
+// peekaboo — popup.js
+
+const MASCOTS = {
+  cat:    { emoji: "🐱", name: "Cat" },
+  ghost:  { emoji: "👻", name: "Ghost" },
+  robot:  { emoji: "🤖", name: "Robot" },
+  alien:  { emoji: "👽", name: "Alien" },
+  wizard: { emoji: "🧙", name: "Wizard" },
+};
+
 const TONES = ["funny", "sarcastic", "motivational", "chill", "honest"];
 
-async function load() {
-    const [local, sync] = await Promise.all([
-        chrome.storage.local.get("latestMessage"),
-        chrome.storage.sync.get(["mascot", "tone"])
-    ]);
+let currentTone = "chill";
+let currentMascot = "cat";
 
-    const mascot = sync.mascot || "cat";
-    const tone = sync.tone || "chill";
+// ── Boot ──────────────────────────────────────────────────────────────────────
+document.addEventListener("DOMContentLoaded", async () => {
+  const stored = await chrome.storage.sync.get(["tone", "mascot"]);
+  currentTone   = stored.tone   || "chill";
+  currentMascot = stored.mascot || "cat";
 
-    document.getElementById("mascot-emoji").textContent =
-        MASCOT_EMOJIS[mascot] || "🐱";
+  renderTonePills();
+  await loadAndRender();
 
-    const msg = local.latestMessage;
-
-    if (msg && msg.text) {
-        document.getElementById("message-text").textContent = msg.text;
-        document.getElementById("message-text").classList.remove("empty");
-
-        const diff = Math.floor((Date.now() - msg.timestamp) / 60000);
-        const timeStr =
-            diff < 1 ? "just now" :
-                diff === 1 ? "1 min ago" :
-                    `${diff} mins ago`;
-
-        document.getElementById("message-time").textContent = timeStr;
-        document.getElementById("tone-badge").textContent = msg.tone || tone;
-    } else {
-        document.getElementById("message-text").textContent =
-            "No check-in yet — hang tight!";
-        document.getElementById("message-text").classList.add("empty");
+  // ── Auto-refresh when background writes a new message ─────────────────────
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === "local" && changes.latestMessage) {
+      renderMessage(changes.latestMessage.newValue);
     }
+  });
 
-    renderTonePills(tone);
-}
-
-function renderTonePills(activeTone) {
-    const row = document.getElementById("tone-row");
-    row.innerHTML = "";
-
-    TONES.forEach(t => {
-        const btn = document.createElement("button");
-        btn.className = "tone-pill" + (t === activeTone ? " active" : "");
-        btn.textContent = t.charAt(0).toUpperCase() + t.slice(1);
-
-        btn.addEventListener("click", async () => {
-            await chrome.storage.sync.set({ tone: t });
-
-            document.querySelectorAll(".tone-pill")
-                .forEach(b => b.classList.remove("active"));
-
-            btn.classList.add("active");
-            document.getElementById("tone-badge").textContent = t;
-        });
-
-        row.appendChild(btn);
-    });
-}
-
-document.getElementById("refresh-btn").addEventListener("click", async () => {
+  // ── Check-in button ───────────────────────────────────────────────────────
+  document.getElementById("refresh-btn").addEventListener("click", async () => {
     const btn = document.getElementById("refresh-btn");
-
     btn.disabled = true;
     btn.textContent = "Checking in…";
 
-    try {
-        await chrome.runtime.sendMessage({ type: "MANUAL_CHECKIN" });
-    } catch (err) {
-        console.warn("Background not ready yet:", err);
-    }
-
-    await load();
-
-    btn.disabled = false;
-    btn.textContent = "✦ Check in now";
+    chrome.runtime.sendMessage({ type: "MANUAL_CHECKIN" }, () => {
+      // Response arrives via storage listener above — just re-enable button
+      setTimeout(() => {
+        btn.disabled = false;
+        btn.textContent = "✦ Check in now";
+      }, 3000);
+    });
+  });
 });
 
-load();
+// ── Load from storage and render ──────────────────────────────────────────────
+async function loadAndRender() {
+  const data = await chrome.storage.local.get("latestMessage");
+  renderMessage(data.latestMessage || null);
+}
+
+function renderMessage(msg) {
+  const textEl  = document.getElementById("message-text");
+  const timeEl  = document.getElementById("message-time");
+  const badgeEl = document.getElementById("tone-badge");
+  const mascotEl = document.getElementById("mascot-emoji");
+
+  // Mascot
+  mascotEl.textContent = MASCOTS[currentMascot]?.emoji || "🐱";
+
+  if (!msg) {
+    textEl.textContent = "No check-in yet — hit the button!";
+    textEl.classList.add("empty");
+    timeEl.textContent  = "";
+    badgeEl.textContent = "";
+    return;
+  }
+
+  textEl.textContent = msg.text;
+  textEl.classList.remove("empty");
+
+  if (msg.timestamp) {
+    timeEl.textContent = formatTime(msg.timestamp);
+  }
+
+  badgeEl.textContent = msg.tone ? `#${msg.tone}` : "";
+}
+
+// ── Tone pills ────────────────────────────────────────────────────────────────
+function renderTonePills() {
+  const row = document.getElementById("tone-row");
+  row.innerHTML = "";
+
+  for (const tone of TONES) {
+    const btn = document.createElement("button");
+    btn.className = "tone-pill" + (tone === currentTone ? " active" : "");
+    btn.textContent = tone;
+    btn.addEventListener("click", async () => {
+      currentTone = tone;
+      await chrome.storage.sync.set({ tone });
+      renderTonePills();
+    });
+    row.appendChild(btn);
+  }
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function formatTime(ts) {
+  const d = new Date(ts);
+  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}

@@ -11,6 +11,7 @@ const TONE_EXAMPLES = {
 };
 
 const INTERVALS = [
+  { label: "30 sec", value: 0.5 },
   { label: "15 min", value: 15 },
   { label: "30 min", value: 30 },
   { label: "1 hour", value: 60 },
