@@ -224,7 +224,7 @@
     <div class="checkmark">🎉</div>
     <h2>You're all set!</h2>
     <p>Your mascot will check in every <span id="done-interval"></span>. Close this tab and start browsing — your first check-in is on its way.</p>
-    <button class="btn-done" onclick="window.close()">Start browsing →</button>
+    <button class="btn-done" id="done-btn">Start browsing →</button>
   </div>
 
 </div>
@@ -256,13 +256,24 @@ let currentStep = 1;
 async function fetchSVG(id) {
   try {
     const url = chrome.runtime.getURL(`mascots/${id}.svg`);
+    console.log("Fetching:", url);
+
     const res = await fetch(url);
-    return await res.text();
-  } catch {
-    // fallback to emoji inside a circle if fetch fails
-    return `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}`);
+    }
+
+    const text = await res.text();
+    return text;
+  } catch (err) {
+    console.error(`Failed to load ${id}.svg`, err);
+
+    return `<svg viewBox="0 0 64 64">
       <circle cx="32" cy="32" r="30" fill="#eef2ff"/>
-      <text x="32" y="42" text-anchor="middle" font-size="32">${MASCOT_EMOJIS[id]}</text>
+      <text x="32" y="42" text-anchor="middle" font-size="32">
+        ${MASCOT_EMOJIS[id]}
+      </text>
     </svg>`;
   }
 }
