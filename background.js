@@ -1,5 +1,5 @@
 // peekaboo — background.js
-// Service worker: alarms, history fetch, Gemini API call, storage write
+// Service worker: alarms, history fetch, groq API call, storage write
 
 const ALARM_NAME = "peekaboo-interval";
 const DEFAULT_INTERVAL = 30; // minutes
@@ -85,7 +85,7 @@ async function runCheckin() {
     return;
   }
 
-  const message = await callGemini(settings.apiKey, tone, tabs, history);
+  const message = await callgroq(settings.apiKey, tone, tabs, history);
   await saveMessage(message, tone);
 
   // Ping all active tabs to refresh the mascot
@@ -152,8 +152,8 @@ function stripSensitive(url) {
   }
 }
 
-// ── Gemini API call ───────────────────────────────────────────────────────────
-async function callGemini(apiKey, tone, tabs, history) {
+// ── groq API call ───────────────────────────────────────────────────────────
+async function callgroq(apiKey, tone, tabs, history) {
   const systemInstruction = TONE_PROMPTS[tone] || TONE_PROMPTS.chill;
   const userContent = buildPrompt(tabs, history);
 
@@ -216,3 +216,23 @@ async function saveMessage(text, tone) {
     }
   });
 }
+
+chrome.tabs.onActivated.addListener(async (activeInfo) => {
+  try {
+    await chrome.tabs.sendMessage(activeInfo.tabId, {
+      type: "PEEKABOO_UPDATE"
+    });
+  } catch {
+    // content script might not be ready — ignore
+  }
+});
+
+chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+  if (changeInfo.status === "complete") {
+    try {
+      await chrome.tabs.sendMessage(tabId, {
+        type: "PEEKABOO_UPDATE"
+      });
+    } catch {}
+  }
+});

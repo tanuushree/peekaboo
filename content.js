@@ -1,5 +1,5 @@
 // peekaboo — background.js
-// Service worker: alarms, history fetch, Gemini API call, storage write
+// Service worker: alarms, history fetch, Groq AP call, storage write
 
 const ALARM_NAME = "peekaboo-interval";
 const DEFAULT_INTERVAL = 30; // minutes
@@ -76,16 +76,24 @@ async function runCheckin() {
     return;
   }
 
-  const message = await callGemini(settings.apiKey, tone, tabs, history);
+  const message = await callGroq(settings.apiKey, tone, tabs, history);
   await saveMessage(message, tone);
 
   // Ping all active tabs to refresh the mascot
-  const allTabs = await chrome.tabs.query({ active: true });
-  for (const tab of allTabs) {
-    if (tab.id && tab.url && !tab.url.startsWith("chrome://")) {
-      chrome.tabs.sendMessage(tab.id, { type: "peekaboo_UPDATE" }).catch(() => {});
-    }
-  }
+  const allTabs = await chrome.tabs.query({});
+
+for (const tab of allTabs) {
+  if (!tab.id || !tab.url) continue;
+
+  if (
+    tab.url.startsWith("chrome://") ||
+    tab.url.startsWith("chrome-extension://")
+  ) continue;
+
+  try {
+    chrome.tabs.sendMessage(tab.id, { type: "PEEKABOO_UPDATE" });
+  } catch (e) {}
+}
 }
 
 // ── Fetch open tab titles/URLs ────────────────────────────────────────────────
@@ -130,14 +138,13 @@ function stripSensitive(url) {
   }
 }
 
-// ── Gemini API call ───────────────────────────────────────────────────────────
-async function callGemini(apiKey, tone, tabs, history) {
+// ── Groq API call ───────────────────────────────────────────────────────────
+async function callGroq(apiKey, tone, tabs, history) {
   const systemInstruction = TONE_PROMPTS[tone] || TONE_PROMPTS.chill;
 
   const userContent = buildPrompt(tabs, history);
 
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-
+const endpoint = "https://api.groq.com/openai/v1/chat/completions";
   const body = {
     system_instruction: { parts: [{ text: systemInstruction }] },
     contents: [{ role: "user", parts: [{ text: userContent }] }],
@@ -153,13 +160,13 @@ async function callGemini(apiKey, tone, tabs, history) {
 
     if (!res.ok) {
       const err = await res.text();
-      console.error("peekaboo Gemini error:", err);
+      console.error("peekaboo Groq error:", err);
       return "Couldn't reach the AI right now — check your API key in settings.";
     }
 
     const data = await res.json();
-    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-    return text?.trim() || "No message generated — try again shortly.";
+const text = data?.choices?.[0]?.message?.content;
+     return text?.trim() || "No message generated — try again shortly.";
   } catch (err) {
     console.error("peekaboo fetch error:", err);
     return "Network error — check your connection.";
@@ -182,3 +189,20 @@ async function saveMessage(text, tone) {
     }
   });
 }
+
+
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== "local") return;
+
+  if (changes.latestMessage) {
+    chrome.tabs.query({}, (tabs) => {
+      for (const tab of tabs) {
+        if (!tab.id) continue;
+
+        chrome.tabs.sendMessage(tab.id, {
+          type: "PEEKABOO_UPDATE"
+        }).catch(() => {});
+      }
+    });
+  }
+});
