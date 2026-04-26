@@ -1,73 +1,139 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <title>Peekaboo</title>
+
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
     :root {
-      --accent: #6366f1;
-      --text: #111;
-      --muted: #6b7280;
-      --border: #e5e7eb;
-      --bg: #fafafa;
+      --red: #ff4520;
+      --black: #0b0b0b;
+      --text: #e5e5e5;
+      --muted: #777;
+      --border: #1a1a1a;
     }
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: var(--bg);
-      width: 300px;
-      min-height: 120px;
+      background: var(--black);
       color: var(--text);
+      width: 320px;
     }
 
+    /* ── Header (Ticker) ───────────────── */
     .header {
+      background: var(--red);
+      overflow: hidden;
+      height: 28px;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      padding: 14px 16px 12px;
-      border-bottom: 1px solid var(--border);
     }
 
-    .brand {
-      font-size: 14px;
+    /* ticker container */
+    .ticker {
+      width: 100%;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* moving track */
+    .ticker-track {
+      display: flex;
+      width: max-content;
+      animation: scrollTicker 12s linear infinite;
+    }
+
+    /* text */
+    .ticker-track span {
+      font-size: 11px;
       font-weight: 700;
-      letter-spacing: -0.3px;
+      color: #000;
+      letter-spacing: 1px;
+      white-space: nowrap;
+      padding-right: 40px;
     }
 
-    .settings-link {
+    /* ── Main Card ───────────────── */
+    .main-card {
+      background: #000;
+      padding: 14px;
+      border-top: 4px solid var(--red);
+    }
+
+    /* ── Title Row ───────────────── */
+    .title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .title {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      color: var(--red);
+    }
+
+    .title span {
+      color: #fff;
+    }
+
+    .tab-count {
+      text-align: right;
       font-size: 18px;
-      text-decoration: none;
-      color: var(--muted);
-      line-height: 1;
+      color: var(--red);
     }
 
-    .message-section {
-      padding: 14px 16px;
+    .tab-count small {
+      font-size: 9px;
+      color: #666;
     }
 
+    /* ── Stripe ───────────────── */
+    .stripe {
+      height: 6px;
+      background: repeating-linear-gradient(45deg,
+          var(--red),
+          var(--red) 6px,
+          #000 6px,
+          #000 12px);
+      margin-bottom: 12px;
+    }
+
+    /* ── Mascot + Message ───────────────── */
     .mascot-row {
       display: flex;
-      align-items: flex-start;
       gap: 10px;
       margin-bottom: 10px;
     }
 
-    .mascot-emoji {
-      font-size: 28px;
-      flex-shrink: 0;
-      margin-top: 2px;
+    .mascot-box {
+      background: var(--red);
+      padding: 10px;
+      font-size: 20px;
+      clip-path: polygon(0 0, 100% 0, 100% 75%, 75% 100%, 0 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .message-bubble {
-      background: #fff;
-      border: 1px solid var(--border);
-      border-radius: 12px 12px 12px 4px;
-      padding: 10px 12px;
+      background: #0f0f0f;
+      border-left: 3px solid var(--red);
+      padding: 10px;
       font-size: 13px;
       line-height: 1.5;
-      color: var(--text);
+      color: #ddd;
       flex: 1;
     }
 
@@ -76,16 +142,16 @@
       font-style: italic;
     }
 
+    /* ── Meta ───────────────── */
     .meta-row {
       display: flex;
-      align-items: center;
       justify-content: space-between;
       font-size: 11px;
       color: var(--muted);
       margin-bottom: 14px;
     }
 
-    /* Tone switcher */
+    /* ── Tone ───────────────── */
     .tone-label {
       font-size: 11px;
       font-weight: 600;
@@ -103,83 +169,98 @@
 
     .tone-pill {
       padding: 5px 11px;
-      border: 1.5px solid var(--border);
+      border: 1px solid #222;
       border-radius: 20px;
       font-size: 12px;
-      font-weight: 500;
       cursor: pointer;
-      background: none;
-      transition: all 0.15s;
-      color: var(--text);
+      color: #aaa;
+      background: transparent;
     }
-
-    .tone-pill:hover { border-color: var(--accent); color: var(--accent); }
 
     .tone-pill.active {
-      border-color: var(--accent);
-      background: var(--accent);
-      color: #fff;
+      border-color: var(--red);
+      color: var(--red);
     }
 
+    /* ── Button ───────────────── */
     .refresh-btn {
       width: 100%;
       margin-top: 12px;
-      padding: 9px;
-      background: #fff;
-      border: 1.5px solid var(--border);
-      border-radius: 8px;
-      font-size: 13px;
-      font-weight: 500;
+      padding: 10px;
+      background: var(--red);
+      border: none;
+      color: #000;
+      font-weight: 700;
       cursor: pointer;
-      color: var(--text);
-      transition: background 0.15s;
     }
 
-    .refresh-btn:hover { background: #f3f4f6; }
-
-    .refresh-btn:disabled {
-      opacity: 0.5;
-      cursor: default;
+    .refresh-btn:hover {
+      opacity: 0.9;
     }
 
-    .footer {
-      padding: 10px 16px;
-      border-top: 1px solid var(--border);
-      display: flex;
-      justify-content: flex-end;
-    }
+    @keyframes scrollTicker {
+      0% {
+        transform: translateX(0);
+      }
 
-    .options-link {
-      font-size: 12px;
-      color: var(--muted);
-      text-decoration: none;
+      100% {
+        transform: translateX(-50%);
+      }
     }
-
-    .options-link:hover { color: var(--accent); text-decoration: underline; }
   </style>
 </head>
+
 <body>
 
-<div class="header">
-  <span class="brand">👁 Peekaboo</span>
-</div>
-
-<div class="message-section">
-  <div class="mascot-row">
-    <div class="mascot-emoji" id="mascot-emoji">🐱</div>
-    <div class="message-bubble" id="message-text">Loading your latest vibe...</div>
-  </div>
-  <div class="meta-row">
-    <span id="message-time"></span>
-    <span id="tone-badge"></span>
+  <!-- Header -->
+  <div class="header">
+    <div class="ticker">
+      <div class="ticker-track">
+        <span>PEEKABOO IS WATCHING ✦ YOUR TABS ✦ NO BROWSING GOES UNNOTICED ✦ </span>
+        <span>PEEKABOO IS WATCHING ✦ YOUR TABS ✦ NO BROWSING GOES UNNOTICED ✦ </span>
+      </div>
+    </div>
   </div>
 
-  <div class="tone-label">Switch tone</div>
-  <div class="tone-row" id="tone-row"></div>
+  <!-- Main -->
+  <div class="main-card">
 
-  <div class="refresh-btn" id="refresh-btn">✦ Check in now</div>
+    <!-- Title -->
+    <div class="title-row">
+      <div class="title">PEEK<span>ABOO</span></div>
+      <div class="tab-count" id="tab-count">
+        --<br><small>TABS OPEN</small>
+      </div>
+    </div>
 
-<script src="popup.js"></script>
+    <div class="stripe"></div>
+
+    <!-- Message -->
+    <div class="mascot-row">
+      <div class="mascot-box">
+        <span id="mascot-emoji">🐱</span>
+      </div>
+      <div class="message-bubble" id="message-text">
+        Loading your latest vibe...
+      </div>
+    </div>
+
+    <div class="meta-row">
+      <span id="message-time"></span>
+      <span id="tone-badge"></span>
+    </div>
+
+    <!-- Tone -->
+    <div class="tone-label">Set the vibe</div>
+    <div class="tone-row" id="tone-row"></div>
+
+    <!-- Button -->
+    <button class="refresh-btn" id="refresh-btn">✦ CHECK IN NOW</button>
+
+  </div>
+
+  <script src="popup.js"></script>
+
 </body>
 
 </html>

@@ -101,3 +101,8 @@ function formatTime(ts) {
   const d = new Date(ts);
   return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
+
+chrome.tabs.query({}, (tabs) => {
+  document.getElementById("tab-count").innerHTML =
+    `${tabs.length}<br><small>TABS OPEN</small>`;
+});
