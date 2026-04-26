@@ -1,7 +1,7 @@
-// Vibecheck — background.js
+// peekaboo — background.js
 // Service worker: alarms, history fetch, Gemini API call, storage write
 
-const ALARM_NAME = "vibecheck-interval";
+const ALARM_NAME = "peekaboo-interval";
 const DEFAULT_INTERVAL = 30; // minutes
 
 // ── Tone → system prompt mapping ──────────────────────────────────────────────
@@ -59,7 +59,7 @@ async function runCheckin() {
   const settings = await chrome.storage.sync.get(["apiKey", "tone", "mascot", "blocklist"]);
 
   if (!settings.apiKey) {
-    console.warn("Vibecheck: no API key set — skipping check-in.");
+    console.warn("peekaboo: no API key set — skipping check-in.");
     return;
   }
 
@@ -83,7 +83,7 @@ async function runCheckin() {
   const allTabs = await chrome.tabs.query({ active: true });
   for (const tab of allTabs) {
     if (tab.id && tab.url && !tab.url.startsWith("chrome://")) {
-      chrome.tabs.sendMessage(tab.id, { type: "VIBECHECK_UPDATE" }).catch(() => {});
+      chrome.tabs.sendMessage(tab.id, { type: "peekaboo_UPDATE" }).catch(() => {});
     }
   }
 }
@@ -153,7 +153,7 @@ async function callGemini(apiKey, tone, tabs, history) {
 
     if (!res.ok) {
       const err = await res.text();
-      console.error("Vibecheck Gemini error:", err);
+      console.error("peekaboo Gemini error:", err);
       return "Couldn't reach the AI right now — check your API key in settings.";
     }
 
@@ -161,7 +161,7 @@ async function callGemini(apiKey, tone, tabs, history) {
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
     return text?.trim() || "No message generated — try again shortly.";
   } catch (err) {
-    console.error("Vibecheck fetch error:", err);
+    console.error("peekaboo fetch error:", err);
     return "Network error — check your connection.";
   }
 }

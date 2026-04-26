@@ -1,7 +1,7 @@
-// Vibecheck — background.js
+// peekaboo — background.js
 // Service worker: alarms, history fetch, Gemini API call, storage write
 
-const ALARM_NAME = "vibecheck-interval";
+const ALARM_NAME = "peekaboo-interval";
 const DEFAULT_INTERVAL = 30; // minutes
 
 // ── Tone → system prompt mapping ──────────────────────────────────────────────
@@ -68,7 +68,7 @@ async function runCheckin() {
   const settings = await chrome.storage.sync.get(["apiKey", "tone", "mascot", "blocklist"]);
 
   if (!settings.apiKey) {
-    console.warn("Vibecheck: no API key set — skipping check-in.");
+    console.warn("peekaboo: no API key set — skipping check-in.");
     return;
   }
 
