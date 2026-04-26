@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Peekaboo</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --accent: #6366f1;
+      --text: #111;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --bg: #fafafa;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      width: 300px;
+      min-height: 120px;
+      color: var(--text);
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .brand {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .settings-link {
+      font-size: 18px;
+      text-decoration: none;
+      color: var(--muted);
+      line-height: 1;
+    }
+
+    .message-section {
+      padding: 14px 16px;
+    }
+
+    .mascot-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .mascot-emoji {
+      font-size: 28px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .message-bubble {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 12px 12px 12px 4px;
+      padding: 10px 12px;
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--text);
+      flex: 1;
+    }
+
+    .message-bubble.empty {
+      color: var(--muted);
+      font-style: italic;
+    }
+
+    .meta-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    /* Tone switcher */
+    .tone-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .tone-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .tone-pill {
+      padding: 5px 11px;
+      border: 1.5px solid var(--border);
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      background: none;
+      transition: all 0.15s;
+      color: var(--text);
+    }
+
+    .tone-pill:hover { border-color: var(--accent); color: var(--accent); }
+
+    .tone-pill.active {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .refresh-btn {
+      width: 100%;
+      margin-top: 12px;
+      padding: 9px;
+      background: #fff;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      color: var(--text);
+      transition: background 0.15s;
+    }
+
+    .refresh-btn:hover { background: #f3f4f6; }
+
+    .refresh-btn:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+
+    .footer {
+      padding: 10px 16px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .options-link {
+      font-size: 12px;
+      color: var(--muted);
+      text-decoration: none;
+    }
+
+    .options-link:hover { color: var(--accent); text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <span class="brand">👁 Peekaboo</span>
+</div>
+
+<div class="message-section">
+  <div class="mascot-row">
+    <div class="mascot-emoji" id="mascot-emoji">🐱</div>
+    <div class="message-bubble" id="message-text">Loading your latest vibe...</div>
+  </div>
+  <div class="meta-row">
+    <span id="message-time"></span>
+    <span id="tone-badge"></span>
+  </div>
+
+  <div class="tone-label">Switch tone</div>
+  <div class="tone-row" id="tone-row">
+    <!-- populated by JS -->
+  </div>
+
+  <button class="refresh-btn" id="refresh-btn">✦ Check in now</button>
+</div>
+
+<script>
+const MASCOT_EMOJIS = { cat: "🐱", robot: "🤖", fox: "🦊", panda: "🐼", frog: "🐸" };
+const TONES = ["funny", "sarcastic", "motivational", "chill", "honest"];
+
+async function load() {
+  const [local, sync] = await Promise.all([
+    chrome.storage.local.get("latestMessage"),
+    chrome.storage.sync.get(["mascot", "tone"])
+  ]);
+
+  const mascot = sync.mascot || "cat";
+  const tone = sync.tone || "chill";
+
+  document.getElementById("mascot-emoji").textContent = MASCOT_EMOJIS[mascot] || "🐱";
+
+  const msg = local.latestMessage;
+  if (msg && msg.text) {
+    document.getElementById("message-text").textContent = msg.text;
+    document.getElementById("message-text").classList.remove("empty");
+    const diff = Math.floor((Date.now() - msg.timestamp) / 60000);
+    const timeStr = diff < 1 ? "just now" : diff === 1 ? "1 min ago" : `${diff} mins ago`;
+    document.getElementById("message-time").textContent = timeStr;
+    document.getElementById("tone-badge").textContent = msg.tone || tone;
+  } else {
+    document.getElementById("message-text").textContent = "No check-in yet — hang tight!";
+    document.getElementById("message-text").classList.add("empty");
+  }
+
+  renderTonePills(tone);
+}
+
+function renderTonePills(activeTone) {
+  const row = document.getElementById("tone-row");
+  row.innerHTML = "";
+  TONES.forEach(t => {
+    const btn = document.createElement("button");
+    btn.className = "tone-pill" + (t === activeTone ? " active" : "");
+    btn.textContent = t.charAt(0).toUpperCase() + t.slice(1);
+    btn.addEventListener("click", async () => {
+      await chrome.storage.sync.set({ tone: t });
+      document.querySelectorAll(".tone-pill").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      document.getElementById("tone-badge").textContent = t;
+    });
+    row.appendChild(btn);
+  });
+}
+
+document.getElementById("refresh-btn").addEventListener("click", async () => {
+  const btn = document.getElementById("refresh-btn");
+  btn.disabled = true;
+  btn.textContent = "Checking in…";
+  await chrome.runtime.sendMessage({ type: "MANUAL_CHECKIN" });
+  // Wait a moment for storage to update
+  await new Promise(r => setTimeout(r, 2200));
+  await load();
+  btn.disabled = false;
+  btn.textContent = "✦ Check in now";
+});
+
+load();
+</script>
+
+</body>
+</html>

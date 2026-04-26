@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Eye bulges (top) -->
+  <circle cx="20" cy="20" r="9" fill="#3cb371"/>
+  <circle cx="44" cy="20" r="9" fill="#3cb371"/>
+  <!-- Head -->
+  <ellipse cx="32" cy="38" rx="22" ry="18" fill="#3cb371"/>
+  <!-- Eyes (on bulges) -->
+  <circle cx="20" cy="19" r="5.5" fill="#1a1a2e"/>
+  <circle cx="44" cy="19" r="5.5" fill="#1a1a2e"/>
+  <circle cx="21.2" cy="17.5" r="1.5" fill="#fff"/>
+  <circle cx="45.2" cy="17.5" r="1.5" fill="#fff"/>
+  <!-- Belly patch -->
+  <ellipse cx="32" cy="41" rx="16" ry="13" fill="#90ee90"/>
+  <!-- Nostrils -->
+  <ellipse cx="28.5" cy="34" rx="1.5" ry="1" fill="#2d8a50"/>
+  <ellipse cx="35.5" cy="34" rx="1.5" ry="1" fill="#2d8a50"/>
+  <!-- Wide mouth -->
+  <path d="M18 42 Q32 50 46 42" fill="none" stroke="#2d8a50" stroke-width="2" stroke-linecap="round"/>
+  <!-- Cheeks -->
+  <ellipse cx="18" cy="42" rx="4" ry="2.5" fill="#66bb6a" opacity="0.6"/>
+  <ellipse cx="46" cy="42" rx="4" ry="2.5" fill="#66bb6a" opacity="0.6"/>
+</svg>

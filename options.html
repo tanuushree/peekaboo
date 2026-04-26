@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Peekaboo — Settings</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --accent: #6366f1;
+      --accent-light: #eef2ff;
+      --text: #111;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --bg: #f3f4f6;
+      --white: #fff;
+      --radius: 12px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 40px 24px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .page-subtitle {
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 32px;
+    }
+
+    .section {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+
+    /* Mascot */
+    .mascot-grid {
+      display: flex;
+      gap: 10px;
+    }
+
+    .mascot-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 10px 8px;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      background: none;
+      cursor: pointer;
+      transition: all 0.15s;
+      flex: 1;
+    }
+
+    .mascot-btn:hover { border-color: var(--accent); background: var(--accent-light); }
+    .mascot-btn.selected { border-color: var(--accent); background: var(--accent-light); }
+    .mascot-btn span.name { font-size: 11px; color: var(--muted); text-transform: capitalize; }
+
+    /* Tone */
+    .tone-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tone-btn {
+      padding: 8px 16px;
+      border: 2px solid var(--border);
+      border-radius: 20px;
+      background: none;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+
+    .tone-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .tone-btn.selected { border-color: var(--accent); background: var(--accent); color: #fff; }
+
+    /* Interval */
+    .interval-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .interval-btn {
+      flex: 1;
+      padding: 9px;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      background: none;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      text-align: center;
+      transition: all 0.15s;
+    }
+
+    .interval-btn:hover { border-color: var(--accent); }
+    .interval-btn.selected { border-color: var(--accent); background: var(--accent-light); color: var(--accent); }
+
+    /* API key */
+    .field-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .field-row input {
+      flex: 1;
+      padding: 9px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 13px;
+      font-family: monospace;
+      outline: none;
+    }
+
+    .field-row input:focus { border-color: var(--accent); }
+
+    .btn-sm {
+      padding: 9px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      background: none;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .btn-sm:hover { background: #f3f4f6; }
+
+    /* Blocklist */
+    .blocklist-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .blocklist-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 12px;
+      background: #f9fafb;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 13px;
+    }
+
+    .blocklist-item button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: #dc2626;
+      font-size: 13px;
+      padding: 2px 6px;
+    }
+
+    .add-domain-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .add-domain-row input {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 13px;
+      outline: none;
+    }
+
+    .add-domain-row input:focus { border-color: var(--accent); }
+
+    /* Save bar */
+    .save-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    .status-msg {
+      font-size: 13px;
+      color: #16a34a;
+    }
+
+    .btn-save {
+      padding: 10px 24px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-save:hover { opacity: 0.88; }
+
+    .help-link {
+      font-size: 12px;
+      color: var(--accent);
+      text-decoration: none;
+      display: block;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>⚙️ Peekaboo Settings</h1>
+<p class="page-subtitle">Manage your mascot, tone, check-in frequency, and privacy settings.</p>
+
+<!-- Mascot -->
+<div class="section">
+  <div class="section-title">Mascot</div>
+  <div class="mascot-grid" id="opt-mascot-grid"></div>
+</div>
+
+<!-- Tone -->
+<div class="section">
+  <div class="section-title">Message tone</div>
+  <div class="tone-grid" id="opt-tone-grid"></div>
+</div>
+
+<!-- Interval -->
+<div class="section">
+  <div class="section-title">Check-in interval</div>
+  <div class="interval-row" id="opt-interval-row"></div>
+</div>
+
+<!-- API key -->
+<div class="section">
+  <div class="section-title">Gemini API key</div>
+  <div class="field-row">
+    <input type="password" id="opt-api-key" placeholder="AIza..." autocomplete="off" />
+    <button class="btn-sm" id="opt-toggle-key">Show</button>
+  </div>
+  <a class="help-link" href="https://aistudio.google.com/app/apikey" target="_blank">
+    → Get a free API key from Google AI Studio
+  </a>
+</div>
+
+<!-- Blocklist -->
+<div class="section">
+  <div class="section-title">Domain blocklist</div>
+  <div class="blocklist-wrap" id="blocklist-wrap"></div>
+  <div class="add-domain-row">
+    <input type="text" id="new-domain" placeholder="e.g. mybank.com" />
+    <button class="btn-sm" id="add-domain-btn">Add</button>
+  </div>
+</div>
+
+<!-- Save -->
+<div class="save-bar">
+  <span class="status-msg" id="save-status"></span>
+  <button class="btn-save" id="save-btn">Save settings</button>
+</div>
+
+<script>
+const MASCOTS = ["cat", "robot", "fox", "panda", "frog"];
+const MASCOT_EMOJIS = { cat: "🐱", robot: "🤖", fox: "🦊", panda: "🐼", frog: "🐸" };
+const TONES = ["funny", "sarcastic", "motivational", "chill", "honest"];
+const INTERVALS = [
+  { label: "15 min", value: 15 },
+  { label: "30 min", value: 30 },
+  { label: "1 hour", value: 60 },
+  { label: "2 hours", value: 120 }
+];
+const DEFAULT_BLOCKLIST = ["bank", "chase.com", "wellsfargo", "mail.google.com", "docs.google.com"];
+
+let localState = { mascot: "cat", tone: "chill", interval: 30, apiKey: "", blocklist: [] };
+
+async function load() {
+  const data = await chrome.storage.sync.get(["mascot", "tone", "interval", "apiKey", "blocklist"]);
+  localState.mascot = data.mascot || "cat";
+  localState.tone = data.tone || "chill";
+  localState.interval = data.interval || 30;
+  localState.apiKey = data.apiKey || "";
+  localState.blocklist = data.blocklist || [...DEFAULT_BLOCKLIST];
+
+  buildMascotGrid();
+  buildToneGrid();
+  buildIntervalRow();
+  document.getElementById("opt-api-key").value = localState.apiKey;
+  renderBlocklist();
+}
+
+function buildMascotGrid() {
+  const el = document.getElementById("opt-mascot-grid");
+  el.innerHTML = "";
+  MASCOTS.forEach(id => {
+    const btn = document.createElement("button");
+    btn.className = "mascot-btn" + (id === localState.mascot ? " selected" : "");
+    btn.innerHTML = `<span style="font-size:30px">${MASCOT_EMOJIS[id]}</span><span class="name">${id}</span>`;
+    btn.addEventListener("click", () => {
+      el.querySelectorAll(".mascot-btn").forEach(b => b.classList.remove("selected"));
+      btn.classList.add("selected");
+      localState.mascot = id;
+    });
+    el.appendChild(btn);
+  });
+}
+
+function buildToneGrid() {
+  const el = document.getElementById("opt-tone-grid");
+  el.innerHTML = "";
+  TONES.forEach(t => {
+    const btn = document.createElement("button");
+    btn.className = "tone-btn" + (t === localState.tone ? " selected" : "");
+    btn.textContent = t.charAt(0).toUpperCase() + t.slice(1);
+    btn.addEventListener("click", () => {
+      el.querySelectorAll(".tone-btn").forEach(b => b.classList.remove("selected"));
+      btn.classList.add("selected");
+      localState.tone = t;
+    });
+    el.appendChild(btn);
+  });
+}
+
+function buildIntervalRow() {
+  const el = document.getElementById("opt-interval-row");
+  el.innerHTML = "";
+  INTERVALS.forEach(opt => {
+    const btn = document.createElement("button");
+    btn.className = "interval-btn" + (opt.value === localState.interval ? " selected" : "");
+    btn.textContent = opt.label;
+    btn.addEventListener("click", () => {
+      el.querySelectorAll(".interval-btn").forEach(b => b.classList.remove("selected"));
+      btn.classList.add("selected");
+      localState.interval = opt.value;
+    });
+    el.appendChild(btn);
+  });
+}
+
+function renderBlocklist() {
+  const wrap = document.getElementById("blocklist-wrap");
+  wrap.innerHTML = "";
+  localState.blocklist.forEach(domain => {
+    const row = document.createElement("div");
+    row.className = "blocklist-item";
+    row.innerHTML = `<span>${domain}</span><button data-domain="${domain}">Remove</button>`;
+    row.querySelector("button").addEventListener("click", () => {
+      localState.blocklist = localState.blocklist.filter(d => d !== domain);
+      renderBlocklist();
+    });
+    wrap.appendChild(row);
+  });
+}
+
+document.getElementById("add-domain-btn").addEventListener("click", () => {
+  const inp = document.getElementById("new-domain");
+  const val = inp.value.trim().toLowerCase();
+  if (val && !localState.blocklist.includes(val)) {
+    localState.blocklist.push(val);
+    renderBlocklist();
+    inp.value = "";
+  }
+});
+
+document.getElementById("opt-toggle-key").addEventListener("click", () => {
+  const inp = document.getElementById("opt-api-key");
+  const btn = document.getElementById("opt-toggle-key");
+  const isHidden = inp.type === "password";
+  inp.type = isHidden ? "text" : "password";
+  btn.textContent = isHidden ? "Hide" : "Show";
+});
+
+document.getElementById("save-btn").addEventListener("click", async () => {
+  localState.apiKey = document.getElementById("opt-api-key").value.trim();
+  await chrome.storage.sync.set({
+    mascot: localState.mascot,
+    tone: localState.tone,
+    interval: localState.interval,
+    apiKey: localState.apiKey,
+    blocklist: localState.blocklist
+  });
+  const msg = document.getElementById("save-status");
+  msg.textContent = "✓ Saved!";
+  setTimeout(() => { msg.textContent = ""; }, 2500);
+});
+
+load();
+</script>
+
+</body>
+</html>

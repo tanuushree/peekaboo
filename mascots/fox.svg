@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- Ears -->
+  <polygon points="10,28 14,8 26,26" fill="#e67e22"/>
+  <polygon points="54,28 50,8 38,26" fill="#e67e22"/>
+  <polygon points="13,26 16,12 25,25" fill="#f5cba7"/>
+  <polygon points="51,26 48,12 39,25" fill="#f5cba7"/>
+  <!-- Head -->
+  <ellipse cx="32" cy="36" rx="22" ry="19" fill="#e67e22"/>
+  <!-- White face patch -->
+  <ellipse cx="32" cy="40" rx="14" ry="12" fill="#fdebd0"/>
+  <!-- Eyes -->
+  <ellipse cx="24" cy="32" rx="3.5" ry="4" fill="#1a1a2e"/>
+  <ellipse cx="40" cy="32" rx="3.5" ry="4" fill="#1a1a2e"/>
+  <circle cx="25" cy="30.8" r="1" fill="#fff"/>
+  <circle cx="41" cy="30.8" r="1" fill="#fff"/>
+  <!-- Nose -->
+  <ellipse cx="32" cy="40" rx="2.5" ry="1.8" fill="#1a1a2e"/>
+  <!-- Mouth -->
+  <path d="M29.5 41.5 Q32 44.5 34.5 41.5" fill="none" stroke="#333" stroke-width="1.2" stroke-linecap="round"/>
+  <!-- Whiskers -->
+  <line x1="8" y1="39" x2="24" y2="40" stroke="#c0946f" stroke-width="0.8" opacity="0.6"/>
+  <line x1="8" y1="42" x2="24" y2="42" stroke="#c0946f" stroke-width="0.8" opacity="0.6"/>
+  <line x1="40" y1="40" x2="56" y2="39" stroke="#c0946f" stroke-width="0.8" opacity="0.6"/>
+  <line x1="40" y1="42" x2="56" y2="42" stroke="#c0946f" stroke-width="0.8" opacity="0.6"/>
+  <!-- Cheeks -->
+  <ellipse cx="20" cy="40" rx="4" ry="2.5" fill="#e8876c" opacity="0.45"/>
+  <ellipse cx="44" cy="40" rx="4" ry="2.5" fill="#e8876c" opacity="0.45"/>
+</svg>

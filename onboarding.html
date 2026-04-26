@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Peekaboo — Setup</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --accent: #6366f1;
+      --accent-light: #eef2ff;
+      --text: #111;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --bg: #fafafa;
+      --white: #fff;
+      --radius: 12px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 48px 24px;
+    }
+
+    header { text-align: center; margin-bottom: 40px; }
+    header h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+    header p { font-size: 15px; color: var(--muted); margin-top: 6px; }
+
+    .progress { display: flex; align-items: center; gap: 8px; margin-bottom: 40px; }
+
+    .step-dot {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 600; color: var(--muted);
+      transition: all 0.2s;
+    }
+    .step-dot.active { background: var(--accent); color: #fff; }
+    .step-dot.done   { background: #22c55e; color: #fff; }
+
+    .step-line { flex: 1; height: 2px; background: var(--border); max-width: 48px; transition: background 0.3s; }
+    .step-line.done { background: #22c55e; }
+
+    .card {
+      background: var(--white); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 32px;
+      width: 100%; max-width: 520px;
+    }
+    .card h2 { font-size: 18px; font-weight: 600; margin-bottom: 6px; }
+    .card .hint { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+
+    /* Mascot grid */
+    .mascot-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+
+    .mascot-btn {
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      padding: 12px 8px;
+      border: 2px solid var(--border); border-radius: var(--radius);
+      background: none; cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .mascot-btn:hover   { border-color: var(--accent); background: var(--accent-light); }
+    .mascot-btn.selected { border-color: var(--accent); background: var(--accent-light); }
+
+    .mascot-svg-wrap { width: 52px; height: 52px; display: flex; align-items: center; justify-content: center; }
+    .mascot-svg-wrap svg { width: 52px; height: 52px; }
+
+    .mascot-btn span { font-size: 11px; color: var(--muted); text-transform: capitalize; }
+
+    /* Tone */
+    .tone-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+    .tone-btn {
+      padding: 10px 18px; border: 2px solid var(--border); border-radius: 24px;
+      background: none; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.15s;
+    }
+    .tone-btn:hover    { border-color: var(--accent); color: var(--accent); }
+    .tone-btn.selected { border-color: var(--accent); background: var(--accent); color: #fff; }
+
+    .tone-preview {
+      margin-top: 20px; padding: 14px 16px; background: #f9fafb;
+      border-radius: 10px; border: 1px solid var(--border);
+      font-size: 13px; color: #374151; min-height: 52px; line-height: 1.5;
+    }
+    .tone-preview em { color: var(--muted); font-style: normal; }
+
+    /* Interval */
+    .interval-options { display: flex; gap: 10px; }
+    .interval-btn {
+      flex: 1; padding: 10px; border: 2px solid var(--border); border-radius: 10px;
+      background: none; cursor: pointer; font-size: 13px; font-weight: 500;
+      text-align: center; transition: all 0.15s;
+    }
+    .interval-btn:hover    { border-color: var(--accent); }
+    .interval-btn.selected { border-color: var(--accent); background: var(--accent-light); color: var(--accent); }
+    .interval-preview { margin-top: 14px; font-size: 13px; color: var(--muted); }
+
+    /* API key */
+    .api-input-wrap { position: relative; }
+    .api-input-wrap input {
+      width: 100%; padding: 10px 40px 10px 14px;
+      border: 1.5px solid var(--border); border-radius: 8px;
+      font-size: 14px; font-family: monospace; outline: none; transition: border-color 0.15s;
+    }
+    .api-input-wrap input:focus { border-color: var(--accent); }
+    .api-input-wrap button {
+      position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer; font-size: 16px; color: var(--muted);
+    }
+
+    .privacy-notice {
+      margin-top: 14px; padding: 12px 14px; background: #fffbeb;
+      border: 1px solid #fde68a; border-radius: 8px;
+      font-size: 12px; color: #92400e; line-height: 1.6;
+    }
+    .api-link { display: inline-block; margin-top: 10px; font-size: 13px; color: var(--accent); text-decoration: none; }
+    .api-link:hover { text-decoration: underline; }
+
+    /* Nav */
+    .nav { display: flex; justify-content: flex-end; margin-top: 28px; gap: 10px; }
+    .btn-back {
+      padding: 10px 20px; border: 1.5px solid var(--border); border-radius: 8px;
+      background: none; cursor: pointer; font-size: 14px; font-weight: 500; color: var(--muted);
+    }
+    .btn-next {
+      padding: 10px 24px; border: none; border-radius: 8px;
+      background: var(--accent); color: #fff; font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: opacity 0.15s;
+    }
+    .btn-next:hover    { opacity: 0.88; }
+    .btn-next:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* Done */
+    #step-done { text-align: center; padding: 16px 0; }
+    #step-done .checkmark { font-size: 56px; margin-bottom: 16px; }
+    #step-done h2 { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+    #step-done p { color: var(--muted); font-size: 15px; line-height: 1.6; margin-bottom: 24px; }
+    .btn-done {
+      padding: 12px 32px; background: var(--accent); color: #fff;
+      border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer;
+    }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>👋 Welcome to Peekaboo</h1>
+  <p>Your browser companion that reads the room. Let's get you set up.</p>
+</header>
+
+<div class="progress" id="progress-bar">
+  <div class="step-dot active" id="dot-1">1</div>
+  <div class="step-line" id="line-1"></div>
+  <div class="step-dot" id="dot-2">2</div>
+  <div class="step-line" id="line-2"></div>
+  <div class="step-dot" id="dot-3">3</div>
+  <div class="step-line" id="line-3"></div>
+  <div class="step-dot" id="dot-4">4</div>
+</div>
+
+<div class="card">
+
+  <div id="step-1">
+    <h2>Pick your mascot</h2>
+    <p class="hint">This little buddy will hang out in the corner of your browser.</p>
+    <div class="mascot-grid" id="mascot-grid"></div>
+    <div class="nav">
+      <button class="btn-next" id="next-1" disabled>Next →</button>
+    </div>
+  </div>
+
+  <div id="step-2" class="hidden">
+    <h2>Choose your message tone</h2>
+    <p class="hint">This shapes how your mascot speaks to you on every check-in.</p>
+    <div class="tone-grid" id="tone-grid"></div>
+    <div class="tone-preview" id="tone-preview">
+      <em>Pick a tone to see a preview message.</em>
+    </div>
+    <div class="nav">
+      <button class="btn-back" id="back-2">← Back</button>
+      <button class="btn-next" id="next-2" disabled>Next →</button>
+    </div>
+  </div>
+
+  <div id="step-3" class="hidden">
+    <h2>Set your check-in interval</h2>
+    <p class="hint">How often should your mascot pop up with an observation?</p>
+    <div class="interval-options" id="interval-options"></div>
+    <p class="interval-preview" id="interval-preview"></p>
+    <div class="nav">
+      <button class="btn-back" id="back-3">← Back</button>
+      <button class="btn-next" id="next-3">Next →</button>
+    </div>
+  </div>
+
+  <div id="step-4" class="hidden">
+    <h2>Enter your Gemini API key</h2>
+    <p class="hint">Needed to generate your personalised check-in messages.</p>
+    <div class="api-input-wrap">
+      <input type="password" id="api-key-input" placeholder="AIza..." autocomplete="off" />
+      <button id="toggle-key" title="Show/hide key">👁</button>
+    </div>
+    <a href="https://aistudio.google.com/app/apikey" target="_blank" class="api-link">
+      → Get a free API key from Google AI Studio
+    </a>
+    <div class="privacy-notice">
+      ⚠️ <strong>Privacy:</strong> On each check-in, your open tab titles and visited page URLs are sent to Google's Gemini API to generate your message. No data is stored by Peekaboo beyond the latest generated message. Your API key is stored in Chrome's sync storage.
+    </div>
+    <div class="nav">
+      <button class="btn-back" id="back-4">← Back</button>
+      <button class="btn-next" id="next-4">Finish setup →</button>
+    </div>
+  </div>
+
+  <div id="step-done" class="hidden">
+    <div class="checkmark">🎉</div>
+    <h2>You're all set!</h2>
+    <p>Your mascot will check in every <span id="done-interval"></span>. Close this tab and start browsing — your first check-in is on its way.</p>
+    <button class="btn-done" onclick="window.close()">Start browsing →</button>
+  </div>
+
+</div>
+
+<script>
+const MASCOTS = ["cat", "robot", "fox", "panda", "frog"];
+const MASCOT_EMOJIS = { cat: "🐱", robot: "🤖", fox: "🦊", panda: "🐼", frog: "🐸" };
+
+const TONES = ["funny", "sarcastic", "motivational", "chill", "honest"];
+const TONE_EXAMPLES = {
+  funny: "You've been reading about salaries and doomscrolling Reddit for 40 mins. Classic.",
+  sarcastic: "Another 40 minutes on Reddit. Crushing it.",
+  motivational: "You've been researching new opportunities — that curiosity is going to pay off.",
+  chill: "Looks like you've been exploring some career stuff. No pressure, just noticing.",
+  honest: "You've spent most of the last 40 minutes on Reddit and salary comparison sites."
+};
+
+const INTERVALS = [
+  { label: "15 min", value: 15 },
+  { label: "30 min", value: 30 },
+  { label: "1 hour", value: 60 },
+  { label: "2 hours", value: 120 }
+];
+
+let state = { mascot: null, tone: null, interval: 30, apiKey: "" };
+let currentStep = 1;
+
+// ── Step 1: fetch each SVG inline and build grid ──────────────────────────────
+async function fetchSVG(id) {
+  try {
+    const url = chrome.runtime.getURL(`mascots/${id}.svg`);
+    const res = await fetch(url);
+    return await res.text();
+  } catch {
+    // fallback to emoji inside a circle if fetch fails
+    return `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="32" cy="32" r="30" fill="#eef2ff"/>
+      <text x="32" y="42" text-anchor="middle" font-size="32">${MASCOT_EMOJIS[id]}</text>
+    </svg>`;
+  }
+}
+
+async function buildMascotGrid() {
+  const grid = document.getElementById("mascot-grid");
+  for (const id of MASCOTS) {
+    const btn = document.createElement("button");
+    btn.className = "mascot-btn";
+
+    const wrap = document.createElement("div");
+    wrap.className = "mascot-svg-wrap";
+    wrap.innerHTML = await fetchSVG(id);
+
+    const label = document.createElement("span");
+    label.textContent = id;
+
+    btn.appendChild(wrap);
+    btn.appendChild(label);
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".mascot-btn").forEach(b => b.classList.remove("selected"));
+      btn.classList.add("selected");
+      state.mascot = id;
+      document.getElementById("next-1").disabled = false;
+    });
+    grid.appendChild(btn);
+  }
+}
+
+buildMascotGrid();
+
+// ── Step 2: tone grid ─────────────────────────────────────────────────────────
+const toneGrid = document.getElementById("tone-grid");
+TONES.forEach(t => {
+  const btn = document.createElement("button");
+  btn.className = "tone-btn";
+  btn.textContent = t.charAt(0).toUpperCase() + t.slice(1);
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".tone-btn").forEach(b => b.classList.remove("selected"));
+    btn.classList.add("selected");
+    state.tone = t;
+    document.getElementById("tone-preview").textContent = TONE_EXAMPLES[t];
+    document.getElementById("next-2").disabled = false;
+  });
+  toneGrid.appendChild(btn);
+});
+
+// ── Step 3: interval ──────────────────────────────────────────────────────────
+const intOptions = document.getElementById("interval-options");
+INTERVALS.forEach(opt => {
+  const btn = document.createElement("button");
+  btn.className = "interval-btn" + (opt.value === 30 ? " selected" : "");
+  btn.textContent = opt.label;
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".interval-btn").forEach(b => b.classList.remove("selected"));
+    btn.classList.add("selected");
+    state.interval = opt.value;
+    updateIntervalPreview();
+  });
+  intOptions.appendChild(btn);
+});
+
+function updateIntervalPreview() {
+  const next = new Date(Date.now() + state.interval * 60000);
+  const hhmm = next.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  document.getElementById("interval-preview").textContent = `Next check-in at ${hhmm}`;
+}
+updateIntervalPreview();
+
+// ── API key toggle ────────────────────────────────────────────────────────────
+document.getElementById("toggle-key").addEventListener("click", () => {
+  const inp = document.getElementById("api-key-input");
+  inp.type = inp.type === "password" ? "text" : "password";
+});
+
+// ── Navigation ────────────────────────────────────────────────────────────────
+function goTo(n) {
+  document.getElementById(`step-${currentStep}`).classList.add("hidden");
+  currentStep = n;
+  if (n === "done") {
+    document.getElementById("progress-bar").classList.add("hidden");
+    document.getElementById("step-done").classList.remove("hidden");
+    document.getElementById("done-interval").textContent =
+      INTERVALS.find(i => i.value === state.interval)?.label || "30 min";
+  } else {
+    document.getElementById(`step-${n}`).classList.remove("hidden");
+    updateProgress(n);
+  }
+}
+
+function updateProgress(step) {
+  [1, 2, 3, 4].forEach(i => {
+    document.getElementById(`dot-${i}`).className =
+      "step-dot" + (i < step ? " done" : i === step ? " active" : "");
+    if (i < 4) {
+      document.getElementById(`line-${i}`).className =
+        "step-line" + (i < step ? " done" : "");
+    }
+  });
+}
+
+document.getElementById("next-1").addEventListener("click", () => goTo(2));
+document.getElementById("back-2").addEventListener("click", () => goTo(1));
+document.getElementById("next-2").addEventListener("click", () => goTo(3));
+document.getElementById("back-3").addEventListener("click", () => goTo(2));
+document.getElementById("next-3").addEventListener("click", () => goTo(4));
+document.getElementById("back-4").addEventListener("click", () => goTo(3));
+
+document.getElementById("next-4").addEventListener("click", async () => {
+  const key = document.getElementById("api-key-input").value.trim();
+  if (!key) { alert("Please enter your Gemini API key."); return; }
+  state.apiKey = key;
+  await chrome.storage.sync.set({
+    mascot: state.mascot,
+    tone: state.tone,
+    interval: state.interval,
+    apiKey: state.apiKey
+  });
+  chrome.runtime.sendMessage({ type: "MANUAL_CHECKIN" });
+  goTo("done");
+});
+</script>
+
+</body>
+</html>
