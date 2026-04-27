@@ -14,8 +14,6 @@
   const host = document.createElement("div");
   host.id = "peekaboo-host";
 
-  // These styles are on the HOST element itself, outside shadow DOM,
-  // so they control its position on the page
   host.style.cssText = `
     all: initial;
     position: fixed;
@@ -78,12 +76,9 @@
       #avatar {
         width: 100px;
         height: 100px;
-        display: block;
-        line-height: 1;
         cursor: pointer;
         pointer-events: auto;
         user-select: none;
-        display: block;
         text-align: right;
         filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
         transition: transform 0.15s ease;
@@ -99,7 +94,6 @@
     <div id="avatar">🐱</div>
   `;
 
-  // Attach to <html> so it's always present regardless of body state
   document.documentElement.appendChild(host);
 
   const bubble = shadow.getElementById("bubble");
@@ -108,16 +102,22 @@
   const dismiss = shadow.getElementById("dismiss");
 
   let hideTimer = null;
+  let cycleTimer = null;
+  let isRunning = false; // ✅ added
 
-  // ── Show bubble ─────────────────────────────────────────────────────────────
+  function showMascot() {
+    host.style.display = "flex";
+  }
+
+  function hideMascot() {
+    host.style.display = "none";
+  }
+
   function showBubble(text) {
     msgEl.textContent = text;
     bubble.style.display = "block";
-    // Force reflow so transition fires
     bubble.getBoundingClientRect();
     bubble.classList.add("visible");
-    clearTimeout(hideTimer);
-    hideTimer = setTimeout(hideBubble, 10_000);
   }
 
   function hideBubble() {
@@ -126,7 +126,6 @@
     setTimeout(() => { bubble.style.display = "none"; }, 200);
   }
 
-  // ── Avatar: toggle bubble ───────────────────────────────────────────────────
   avatar.addEventListener("click", () => {
     if (bubble.classList.contains("visible")) {
       hideBubble();
@@ -142,22 +141,47 @@
     hideBubble();
   });
 
-  // ── Sync mascot ─────────────────────────────────────────────────────────────
+  function startCycle() {
+    clearInterval(cycleTimer);
+    runCycle();
+    cycleTimer = setInterval(runCycle, 5 * 60 * 1000);
+  }
+
+  function runCycle() {
+    if (isRunning) return; // ✅ prevent overlap
+    isRunning = true;
+
+    showMascot();
+
+    chrome.storage.local.get("latestMessage", (data) => {
+      const text = data.latestMessage?.text || "Just lurking 👀";
+      showBubble(text);
+
+      setTimeout(() => {
+        hideBubble();
+
+        setTimeout(() => {
+          hideMascot();
+          isRunning = false; // ✅ release lock
+        }, 60 * 1000);
+
+      }, 10 * 1000);
+    });
+  }
+
   function syncMascot() {
     chrome.storage.sync.get("mascot", (data) => {
       const key = data.mascot || "cat";
       const path = MASCOTS[key] || MASCOTS.cat;
-
       const url = chrome.runtime.getURL(path);
 
       avatar.innerHTML = `
-      <img src="${url}" style="width:100px; height:100px; object-fit:contain;" />
-    `;
+        <img src="${url}" style="width:100px; height:100px; object-fit:contain;" />
+      `;
     });
   }
   syncMascot();
 
-  // ── Background message ──────────────────────────────────────────────────────
   chrome.runtime.onMessage.addListener((msg) => {
     if (msg.type !== "PEEKABOO_UPDATE") return;
     chrome.storage.local.get("latestMessage", (data) => {
@@ -168,12 +192,14 @@
     });
   });
 
-  // ── Storage watcher (belt-and-suspenders) ───────────────────────────────────
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area === "local" && changes.latestMessage) {
       syncMascot();
       showBubble(changes.latestMessage.newValue?.text || "");
     }
   });
+
+  hideMascot();
+  startCycle();
 
 })();
