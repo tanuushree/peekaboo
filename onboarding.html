@@ -5,28 +5,43 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Peekaboo — Setup</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
-    *,
-    *::before,
-    *::after {
+    *, *::before, *::after {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
 
     :root {
-      --accent: #6366f1;
-      --accent-light: #eef2ff;
-      --text: #111;
-      --muted: #6b7280;
-      --border: #e5e7eb;
-      --bg: #fafafa;
-      --white: #fff;
-      --radius: 12px;
+      --accent: #FF8C5A;
+      --accent-hover: #F07040;
+      --accent-light: #FFF0E6;
+      --accent-deep: #C25A1A;
+
+      --text: #2D1B0E;
+      --muted: #B07040;
+      --muted-soft: #C09070;
+
+      --border: #FFD4B0;
+      --border-soft: #FFF0E6;
+
+      --bg: #FFF8F1;
+      --white: #ffffff;
+
+      --success: #22c55e;
+      --success-light: #DCFCE7;
+
+      --warning-bg: #FFF7ED;
+      --warning-border: #FFEDD5;
+      --warning-text: #9A3412;
+
+      --radius: 18px;
+      --radius-sm: 12px;
     }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-family: 'DM Sans', sans-serif;
       background: var(--bg);
       color: var(--text);
       min-height: 100vh;
@@ -38,49 +53,76 @@
 
     header {
       text-align: center;
-      margin-bottom: 40px;
+      margin-bottom: 36px;
+    }
+
+    .logo-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 56px;
+      height: 56px;
+      border-radius: 18px;
+      background: var(--accent);
+      font-size: 28px;
+      margin-bottom: 14px;
+      box-shadow: 0 8px 24px rgba(255, 140, 90, 0.35);
+      animation: bob 3s ease-in-out infinite;
+    }
+
+    @keyframes bob {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
     }
 
     header h1 {
-      font-size: 28px;
+      font-size: 26px;
       font-weight: 700;
-      letter-spacing: -0.5px;
+      color: var(--text);
+      letter-spacing: -0.4px;
     }
 
     header p {
-      font-size: 15px;
+      font-size: 14px;
       color: var(--muted);
       margin-top: 6px;
+      font-weight: 500;
     }
 
+    /* Progress */
     .progress {
       display: flex;
       align-items: center;
       gap: 8px;
-      margin-bottom: 40px;
+      margin-bottom: 36px;
     }
 
     .step-dot {
-      width: 28px;
-      height: 28px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
-      background: var(--border);
+      background: var(--border-soft);
+      border: 2px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 12px;
-      font-weight: 600;
-      color: var(--muted);
-      transition: all 0.2s;
+      font-weight: 700;
+      color: var(--muted-soft);
+      transition: all 0.3s cubic-bezier(0.34,1.56,0.64,1);
     }
 
     .step-dot.active {
       background: var(--accent);
+      border-color: var(--accent);
       color: #fff;
+      box-shadow: 0 4px 14px rgba(255,140,90,0.4);
+      transform: scale(1.1);
     }
 
     .step-dot.done {
-      background: #22c55e;
+      background: var(--success);
+      border-color: var(--success);
       color: #fff;
     }
 
@@ -89,39 +131,53 @@
       height: 2px;
       background: var(--border);
       max-width: 48px;
+      border-radius: 2px;
       transition: background 0.3s;
     }
 
     .step-line.done {
-      background: #22c55e;
+      background: var(--success);
     }
 
+    /* Card */
     .card {
       background: var(--white);
-      border: 1px solid var(--border);
+      border: 1.5px solid var(--border);
       border-radius: var(--radius);
       padding: 32px;
       width: 100%;
       max-width: 520px;
+      box-shadow: 0 8px 32px rgba(194, 90, 26, 0.08);
     }
 
     .card h2 {
-      font-size: 18px;
-      font-weight: 600;
-      margin-bottom: 6px;
+      font-size: 19px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 5px;
     }
 
     .card .hint {
       font-size: 13px;
       color: var(--muted);
-      margin-bottom: 24px;
+      margin-bottom: 22px;
+      font-weight: 500;
     }
 
-    /* Mascot grid */
+    /* Nav row */
+    .nav {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 24px;
+    }
+
+    /* Mascot */
     .mascot-grid {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
-      gap: 12px;
+      gap: 10px;
+      margin-bottom: 0;
     }
 
     .mascot-btn {
@@ -131,20 +187,24 @@
       gap: 6px;
       padding: 12px 8px;
       border: 2px solid var(--border);
-      border-radius: var(--radius);
-      background: none;
+      border-radius: var(--radius-sm);
+      background: var(--white);
       cursor: pointer;
-      transition: border-color 0.15s, background 0.15s;
+      transition: all 0.2s cubic-bezier(0.34,1.56,0.64,1);
     }
 
     .mascot-btn:hover {
       border-color: var(--accent);
       background: var(--accent-light);
+      transform: translateY(-3px) scale(1.03);
+      box-shadow: 0 6px 16px rgba(255,140,90,0.18);
     }
 
     .mascot-btn.selected {
       border-color: var(--accent);
       background: var(--accent-light);
+      box-shadow: 0 4px 14px rgba(255,140,90,0.28);
+      transform: translateY(-2px);
     }
 
     .mascot-svg-wrap {
@@ -155,14 +215,10 @@
       justify-content: center;
     }
 
-    .mascot-svg-wrap svg {
-      width: 52px;
-      height: 52px;
-    }
-
     .mascot-btn span {
       font-size: 11px;
       color: var(--muted);
+      font-weight: 600;
       text-transform: capitalize;
     }
 
@@ -170,45 +226,51 @@
     .tone-grid {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 8px;
     }
 
     .tone-btn {
-      padding: 10px 18px;
+      padding: 9px 18px;
       border: 2px solid var(--border);
-      border-radius: 24px;
-      background: none;
+      border-radius: 50px;
+      background: var(--white);
       cursor: pointer;
-      font-size: 14px;
-      font-weight: 500;
-      transition: all 0.15s;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--muted);
+      transition: all 0.2s cubic-bezier(0.34,1.56,0.64,1);
     }
 
     .tone-btn:hover {
       border-color: var(--accent);
-      color: var(--accent);
+      color: var(--accent-deep);
+      background: var(--accent-light);
+      transform: translateY(-2px);
     }
 
     .tone-btn.selected {
       border-color: var(--accent);
       background: var(--accent);
       color: #fff;
+      box-shadow: 0 4px 12px rgba(255,140,90,0.3);
     }
 
     .tone-preview {
-      margin-top: 20px;
+      margin-top: 18px;
       padding: 14px 16px;
-      background: #f9fafb;
-      border-radius: 10px;
-      border: 1px solid var(--border);
+      background: var(--bg);
+      border-radius: var(--radius-sm);
+      border: 1.5px solid var(--border);
       font-size: 13px;
-      color: #374151;
+      color: var(--text);
       min-height: 52px;
-      line-height: 1.5;
+      font-weight: 500;
+      line-height: 1.6;
     }
 
     .tone-preview em {
-      color: var(--muted);
+      color: var(--muted-soft);
       font-style: normal;
     }
 
@@ -220,51 +282,61 @@
 
     .interval-btn {
       flex: 1;
-      padding: 10px;
+      padding: 12px 10px;
       border: 2px solid var(--border);
-      border-radius: 10px;
-      background: none;
+      border-radius: var(--radius-sm);
+      background: var(--white);
       cursor: pointer;
       font-size: 13px;
-      font-weight: 500;
-      text-align: center;
-      transition: all 0.15s;
+      font-weight: 600;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--muted);
+      transition: all 0.2s cubic-bezier(0.34,1.56,0.64,1);
     }
 
     .interval-btn:hover {
       border-color: var(--accent);
+      color: var(--accent-deep);
+      background: var(--accent-light);
+      transform: translateY(-2px);
     }
 
     .interval-btn.selected {
       border-color: var(--accent);
       background: var(--accent-light);
-      color: var(--accent);
+      color: var(--accent-deep);
+      box-shadow: 0 4px 12px rgba(255,140,90,0.18);
     }
 
     .interval-preview {
       margin-top: 14px;
       font-size: 13px;
       color: var(--muted);
+      font-weight: 500;
+      min-height: 20px;
     }
 
-    /* API key */
+    /* API */
     .api-input-wrap {
       position: relative;
     }
 
     .api-input-wrap input {
       width: 100%;
-      padding: 10px 40px 10px 14px;
-      border: 1.5px solid var(--border);
-      border-radius: 8px;
-      font-size: 14px;
+      padding: 11px 42px 11px 14px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
       font-family: monospace;
       outline: none;
-      transition: border-color 0.15s;
+      background: var(--white);
+      color: var(--text);
+      transition: all 0.2s;
     }
 
     .api-input-wrap input:focus {
       border-color: var(--accent);
+      box-shadow: 0 0 0 4px rgba(255,140,90,0.12);
     }
 
     .api-input-wrap button {
@@ -276,117 +348,144 @@
       border: none;
       cursor: pointer;
       font-size: 16px;
-      color: var(--muted);
-    }
-
-    .privacy-notice {
-      margin-top: 14px;
-      padding: 12px 14px;
-      background: #fffbeb;
-      border: 1px solid #fde68a;
-      border-radius: 8px;
-      font-size: 12px;
-      color: #92400e;
-      line-height: 1.6;
+      padding: 4px;
     }
 
     .api-link {
       display: inline-block;
       margin-top: 10px;
-      font-size: 13px;
-      color: var(--accent);
+      font-size: 12px;
+      color: var(--accent-deep);
+      font-weight: 600;
       text-decoration: none;
     }
 
-    .api-link:hover {
-      text-decoration: underline;
-    }
+    .api-link:hover { text-decoration: underline; }
 
-    /* Nav */
-    .nav {
-      display: flex;
-      justify-content: flex-end;
-      margin-top: 28px;
-      gap: 10px;
-    }
-
-    .btn-back {
-      padding: 10px 20px;
-      border: 1.5px solid var(--border);
-      border-radius: 8px;
-      background: none;
-      cursor: pointer;
-      font-size: 14px;
+    .privacy-notice {
+      margin-top: 14px;
+      padding: 12px 14px;
+      background: var(--warning-bg);
+      border: 1.5px solid var(--warning-border);
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      color: var(--warning-text);
+      line-height: 1.6;
       font-weight: 500;
-      color: var(--muted);
     }
 
+    /* Buttons */
     .btn-next {
-      padding: 10px 24px;
+      padding: 10px 22px;
       border: none;
-      border-radius: 8px;
+      border-radius: var(--radius-sm);
       background: var(--accent);
       color: #fff;
       font-size: 14px;
-      font-weight: 600;
+      font-weight: 700;
+      font-family: 'DM Sans', sans-serif;
       cursor: pointer;
-      transition: opacity 0.15s;
+      transition: all 0.2s cubic-bezier(0.34,1.56,0.64,1);
+      box-shadow: 0 4px 14px rgba(255,140,90,0.28);
     }
 
     .btn-next:hover {
-      opacity: 0.88;
+      background: var(--accent-hover);
+      transform: translateY(-2px) scale(1.03);
+      box-shadow: 0 8px 20px rgba(255,140,90,0.35);
     }
+
+    .btn-next:active { transform: scale(0.97); }
 
     .btn-next:disabled {
-      opacity: 0.4;
+      background: var(--border);
+      color: var(--muted-soft);
+      box-shadow: none;
       cursor: not-allowed;
+      transform: none;
     }
 
-    /* Done */
-    #step-done {
+    .btn-back {
+      padding: 10px 18px;
+      border: 2px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--white);
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--muted);
+      transition: all 0.15s;
+    }
+
+    .btn-back:hover {
+      border-color: var(--accent);
+      color: var(--accent-deep);
+    }
+
+    /* Done step */
+    .step-done-inner {
       text-align: center;
-      padding: 16px 0;
+      padding: 16px 0 8px;
     }
 
-    #step-done .checkmark {
-      font-size: 56px;
+    .checkmark {
+      font-size: 52px;
       margin-bottom: 16px;
+      display: block;
+      animation: pop 0.5s cubic-bezier(0.34,1.56,0.64,1);
+    }
+
+    @keyframes pop {
+      0% { transform: scale(0); }
+      100% { transform: scale(1); }
     }
 
     #step-done h2 {
       font-size: 22px;
       font-weight: 700;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
     }
 
     #step-done p {
+      font-size: 14px;
       color: var(--muted);
-      font-size: 15px;
+      font-weight: 500;
       line-height: 1.6;
-      margin-bottom: 24px;
+      margin-bottom: 22px;
     }
 
     .btn-done {
-      padding: 12px 32px;
+      padding: 12px 28px;
+      border: none;
+      border-radius: var(--radius-sm);
       background: var(--accent);
       color: #fff;
-      border: none;
-      border-radius: 8px;
       font-size: 15px;
-      font-weight: 600;
+      font-weight: 700;
+      font-family: 'DM Sans', sans-serif;
       cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.34,1.56,0.64,1);
+      box-shadow: 0 6px 18px rgba(255,140,90,0.35);
+    }
+
+    .btn-done:hover {
+      background: var(--accent-hover);
+      transform: translateY(-2px) scale(1.04);
     }
 
     .hidden {
       display: none !important;
     }
 
-    .mascot-btn img {
-      transition: transform 0.15s ease;
-    }
-
-    .mascot-btn:hover img {
-      transform: scale(1.1);
+    /* section divider inside card */
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 10px;
     }
   </style>
 </head>
@@ -394,7 +493,8 @@
 <body>
 
   <header>
-    <h1>👋 Welcome to Peekaboo</h1>
+    <div class="logo-badge">🍊</div>
+    <h1>Welcome to Peekaboo</h1>
     <p>Your browser companion that reads the room. Let's get you set up.</p>
   </header>
 
@@ -444,10 +544,10 @@
     </div>
 
     <div id="step-4" class="hidden">
-      <h2>Enter your groq API key</h2>
+      <h2>Enter your Groq API key</h2>
       <p class="hint">Needed to generate your personalised check-in messages.</p>
       <div class="api-input-wrap">
-        <input type="password" id="api-key-input" placeholder="AIza..." autocomplete="off" />
+        <input type="password" id="api-key-input" placeholder="gsk_..." autocomplete="off" />
         <button id="toggle-key" title="Show/hide key">👁</button>
       </div>
       <a href="https://aistudio.google.com/app/apikey" target="_blank" class="api-link">
@@ -455,7 +555,7 @@
       </a>
       <div class="privacy-notice">
         ⚠️ <strong>Privacy:</strong> On each check-in, your open tab titles and visited page URLs are sent to Google's
-        groq API to generate your message. No data is stored by Peekaboo beyond the latest generated message. Your API
+        Groq API to generate your message. No data is stored by Peekaboo beyond the latest generated message. Your API
         key is stored in Chrome's sync storage.
       </div>
       <div class="nav">
@@ -465,11 +565,13 @@
     </div>
 
     <div id="step-done" class="hidden">
-      <div class="checkmark">🎉</div>
-      <h2>You're all set!</h2>
-      <p>Your mascot will check in every <span id="done-interval"></span>. Close this tab and start browsing — your
-        first check-in is on its way.</p>
-      <button class="btn-done" id="done-btn">Start browsing →</button>
+      <div class="step-done-inner">
+        <span class="checkmark">🎉</span>
+        <h2>You're all set!</h2>
+        <p>Your mascot will check in every <span id="done-interval"></span>. Close this tab and start browsing — your
+          first check-in is on its way.</p>
+        <button class="btn-done" id="done-btn">Start browsing →</button>
+      </div>
     </div>
 
   </div>
