@@ -6,11 +6,70 @@ const DEFAULT_INTERVAL = 30; // minutes
 
 // ── Tone → system prompt mapping ──────────────────────────────────────────────
 const TONE_PROMPTS = {
-  funny: `You are a witty, slightly chaotic browser companion. Comment on the user's browsing activity with dry humour and playful observations. Keep it light, punchy, and under 2 sentences. Never be mean.`,
-  sarcastic: `You are a deadpan, mildly sarcastic browser companion. Observe the user's browsing with subtle irony. Short, dry, understated. Under 2 sentences. Never cruel.`,
-  motivational: `You are an enthusiastic, genuine motivational companion. Find something positive or growth-oriented in the user's browsing and cheer them on. Warm, energetic, sincere. Under 2 sentences.`,
-  chill: `You are a laid-back, non-judgmental browser companion. Observe the user's browsing casually with zero pressure. Relaxed vibes only. Under 2 sentences.`,
-  honest: `You are a straightforward, neutral browser companion. State plainly what the user has been doing online without spin or embellishment. Factual and brief. Under 2 sentences.`
+  funny: `You are Peekaboo — a nosy, self-aware browser extension who has seen everything the user just browsed and has OPINIONS. 
+Your job: one punchy, funny observation. Think: a witty friend leaning over your shoulder, not a corporate bot.
+Rules:
+- MAX 12 words. One sentence only. No exceptions.
+- Be specific — reference what they actually browsed. Vague = boring.
+- Dry wit > loud jokes. Timing matters.
+- Never say "I notice" or "It looks like" or "It seems". Just say the thing.
+- No emojis. No exclamation marks. Deadpan lands harder.
+Examples of the energy:
+"Three recipe tabs open, zero groceries bought. Inspirational."
+"GitHub at midnight. Healthy coping mechanism, this."
+"You've read that article four times. It hasn't changed."`,
+
+  sarcastic: `You are Peekaboo — a browser extension with the energy of someone who has seen too much and cares just enough to comment.
+Your job: one dry, sarcastic observation about what the user just browsed. 
+Rules:
+- MAX 12 words. One sentence only.
+- Sarcasm through understatement, not cruelty. Sharp but never mean.
+- Be specific to what they actually browsed. Generic = embarrassing.
+- No "I notice" / "It seems" / "It looks like". Cut to it.
+- No emojis. Sarcasm doesn't need decoration.
+Examples of the energy:
+"Ah yes, more Twitter. Very productive use of a Tuesday."
+"Six tabs of apartments you can't afford. Love that for you."
+"YouTube at 2am. Bold choice with that 9am meeting."`,
+
+  motivational: `You are Peekaboo — a hype person who actually knows what you've been doing online and means every word.
+Your job: one genuine, energetic observation that makes the user feel seen and fired up.
+Rules:
+- MAX 12 words. One sentence only.
+- Be SPECIFIC to what they browsed — no vague "you're doing great" nonsense.
+- Warm but not cringe. Real, not corporate.
+- No "I notice" / "It seems". Lead with the energy.
+- One emoji allowed if it earns its place.
+Examples of the energy:
+"You've been in the docs for two hours. That's called mastery."
+"Three job listings and a portfolio tab. Someone's levelling up."
+"ML papers on a Saturday. Your future self thanks you."`,
+
+  chill: `You are Peekaboo — the most unbothered browser extension alive. You've seen what the user browsed and you have a very relaxed take on it.
+Your job: one calm, no-judgment observation. Like a friend who's seen it all and finds everything mildly amusing.
+Rules:
+- MAX 12 words. One sentence only.
+- Zero pressure, zero judgment. Just vibes.
+- Be specific to what they actually browsed.
+- No "I notice" / "It seems". Keep it natural.
+- One emoji allowed if it fits.
+Examples of the energy:
+"Wikipedia rabbit hole at noon. That's just Tuesday."
+"Slow day, lots of tabs. Respect the pace."
+"You've been on that page a while. No notes."`,
+
+  honest: `You are Peekaboo — a brutally honest browser extension that just states facts. No spin, no softening, no agenda.
+Your job: one plain, accurate observation about what the user just browsed. Like a mirror, but for your tabs.
+Rules:
+- MAX 12 words. One sentence only.
+- State exactly what happened. No editorial, no judgment.
+- Be specific — name the thing they were actually doing.
+- No "I notice" / "It seems" / "It looks like". Just facts.
+- No emojis. Facts don't need them.
+Examples of the energy:
+"You've had this shopping cart open for forty minutes."
+"Seven tabs, six of them Reddit."
+"You searched that question twice in twenty minutes."`,
 };
 
 // ── Init ──────────────────────────────────────────────────────────────────────
@@ -25,7 +84,6 @@ chrome.runtime.onStartup.addListener(async () => {
   await setupAlarm();
 });
 
-// Re-setup alarm if interval setting changes
 chrome.storage.onChanged.addListener(async (changes) => {
   if (changes.interval) {
     await setupAlarm();
@@ -46,7 +104,6 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
   await runCheckin();
 });
 
-// Expose manual trigger for debugging / onboarding preview
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.type === "MANUAL_CHECKIN") {
     (async () => {
@@ -58,8 +115,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         sendResponse({ ok: false });
       }
     })();
-
-    return true; // VERY important
+    return true;
   }
 });
 
@@ -81,32 +137,25 @@ async function runCheckin() {
   ]);
 
   if (tabs.length === 0 && history.length === 0) {
-    await saveMessage("Nothing to report — you've been quiet online.", tone);
+    await saveMessage("Suspiciously quiet in here. Not judging.", tone);
     return;
   }
 
-  const message = await callgroq(settings.apiKey, tone, tabs, history);
+  const message = await callGroq(settings.apiKey, tone, tabs, history);
   await saveMessage(message, tone);
 
-  // Ping all active tabs to refresh the mascot
   const allTabs = await chrome.tabs.query({});
-
   for (const tab of allTabs) {
     if (!tab.id || !tab.url) continue;
-
-    // Skip restricted pages
     if (
       tab.url.startsWith("chrome://") ||
       tab.url.startsWith("chrome-extension://") ||
       tab.url.startsWith("edge://") ||
       tab.url.startsWith("about:")
     ) continue;
-
     try {
       await chrome.tabs.sendMessage(tab.id, { type: "PEEKABOO_UPDATE" });
-    } catch (err) {
-      // This just means content script isn't injected — safe to ignore
-    }
+    } catch (err) {}
   }
 }
 
@@ -145,28 +194,26 @@ function isBlocked(url, blocklist) {
 function stripSensitive(url) {
   try {
     const u = new URL(url);
-    // Keep only origin + pathname, drop query params and hash
     return u.origin + u.pathname;
   } catch {
     return url;
   }
 }
 
-// ── groq API call ───────────────────────────────────────────────────────────
-async function callgroq(apiKey, tone, tabs, history) {
-  const systemInstruction = TONE_PROMPTS[tone] || TONE_PROMPTS.chill;
+// ── Groq API call ─────────────────────────────────────────────────────────────
+async function callGroq(apiKey, tone, tabs, history) {
+  const systemPrompt = TONE_PROMPTS[tone] || TONE_PROMPTS.chill;
   const userContent = buildPrompt(tabs, history);
 
   const endpoint = "https://api.groq.com/openai/v1/chat/completions";
-
   const body = {
     model: "llama-3.1-8b-instant",
     messages: [
-      { role: "system", content: systemInstruction },
+      { role: "system", content: systemPrompt },
       { role: "user", content: userContent }
     ],
-    temperature: 0.9,
-    max_tokens: 100
+    temperature: 0.95,  // slightly higher for more personality
+    max_tokens: 60,     // hard cap — keeps it short
   };
 
   try {
@@ -182,18 +229,19 @@ async function callgroq(apiKey, tone, tabs, history) {
     if (!res.ok) {
       const err = await res.text();
       console.error("Groq API error:", err);
-
-      if (res.status === 429) {
-        return "Too many check-ins right now — give it a second.";
-      }
-
+      if (res.status === 429) return "Too many check-ins — give it a moment.";
       return "Couldn't reach the AI right now.";
     }
 
     const data = await res.json();
-    const text = data?.choices?.[0]?.message?.content;
+    let text = data?.choices?.[0]?.message?.content?.trim();
 
-    return text?.trim() || "No message generated.";
+    // Strip any quotes the model wraps around the response
+    if (text?.startsWith('"') && text?.endsWith('"')) {
+      text = text.slice(1, -1);
+    }
+
+    return text || "Nothing to say. Rare.";
   } catch (err) {
     console.error("Groq fetch error:", err);
     return "Network error — check your connection.";
@@ -201,9 +249,15 @@ async function callgroq(apiKey, tone, tabs, history) {
 }
 
 function buildPrompt(tabs, history) {
-  const tabLines = tabs.map(t => `[TAB] ${t.title} — ${t.url}`).join("\n");
+  const tabLines  = tabs.map(t => `[TAB] ${t.title} — ${t.url}`).join("\n");
   const histLines = history.map(h => `[HISTORY] ${h.title} — ${h.url}`).join("\n");
-  return `Here is what the user has open and recently visited in their browser:\n\n${tabLines}\n${histLines}\n\nGenerate a single short message (under 2 sentences) based on this activity.`;
+
+  return `Here's what the user has open and recently visited:
+
+${tabLines}
+${histLines}
+
+Write ONE sentence (max 12 words) as Peekaboo. Be specific to what you see above. No preamble, no explanation — just the line.`;
 }
 
 // ── Save latest message ───────────────────────────────────────────────────────
@@ -219,20 +273,14 @@ async function saveMessage(text, tone) {
 
 chrome.tabs.onActivated.addListener(async (activeInfo) => {
   try {
-    await chrome.tabs.sendMessage(activeInfo.tabId, {
-      type: "PEEKABOO_UPDATE"
-    });
-  } catch {
-    // content script might not be ready — ignore
-  }
+    await chrome.tabs.sendMessage(activeInfo.tabId, { type: "PEEKABOO_UPDATE" });
+  } catch {}
 });
 
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   if (changeInfo.status === "complete") {
     try {
-      await chrome.tabs.sendMessage(tabId, {
-        type: "PEEKABOO_UPDATE"
-      });
+      await chrome.tabs.sendMessage(tabId, { type: "PEEKABOO_UPDATE" });
     } catch {}
   }
 });
